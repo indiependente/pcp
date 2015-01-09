@@ -12,9 +12,9 @@
 #include <mpi.h>
 #include <math.h>
 
-#define N 16
+#define N 4
 
-#define NUMBER 100
+#define NUMBER 10
 #define MASTER 0
 
 void rand_fill_matrix(int **m);
@@ -24,7 +24,7 @@ void print_array_as_matrix(int *array, int count, int blocklength, int rank);
 int** transpose_matrix(int** array, int rows, int cols);
 int** allocate2Dint(int n, int m);
 void free2Dint(int** array);
-int** multiply_matrices(int** A,int** B, int n, int m);
+int** multiply_matrices(int** A, int** B, int n, int m);
 
 int main(int argc, char** argv)
 {
@@ -66,9 +66,13 @@ int main(int argc, char** argv)
 		B = allocate2Dint(N, N);
 		C = allocate2Dint(N, N);
 		ordered_fill_matrix(A);
-		ordered_fill_matrix(B);
+		rand_fill_matrix(B);
 		tB_buffer = transpose_matrix(B, N, N);
+		printf("Matrix A\n");
 		print_matrix(A, N, N, my_rank);
+		printf("Matrix B\n");
+		print_matrix(B, N, N, my_rank);
+		printf("Matrix B TRANSPOSED\n");
 		print_matrix(tB_buffer, N, N, my_rank);
 	}
 
@@ -83,10 +87,11 @@ int main(int argc, char** argv)
 	MPI_Scatter(A_ptr, count, ROW, &A_buffer[0][0], blocklength * count, MPI_INT, MASTER, MPI_COMM_WORLD);
 	MPI_Scatter(B_ptr, count, ROW, &B_buffer[0][0], blocklength * count, MPI_INT, MASTER, MPI_COMM_WORLD);
 
+	print_matrix(A_buffer, count, blocklength, my_rank);
+	print_matrix(B_buffer, count, blocklength, my_rank);
 
 	C_buffer = multiply_matrices(A_buffer, B_buffer, count, blocklength);
-
-	// print_matrix(C_buffer, count, blocklength, my_rank);
+	print_matrix(C_buffer, count, blocklength, my_rank);
 
 	MPI_Gather(&C_buffer[0][0], count * blocklength, MPI_INT, C_ptr, count, ROW, MASTER, MPI_COMM_WORLD);
 
@@ -115,17 +120,24 @@ int** multiply_matrices(int** A, int** B, int n, int m)
 {
 	int i,j,k;
 	int** C = allocate2Dint(n, m);
+	int** tB = transpose_matrix(B,n,m);
+
 	for (i = 0; i < n; i++)
 	{
-		for (j = 0; j < m; j++)
+
+
+		for(j = 0; j < m; j++)
 		{
-			int tmp = 0;
-			for (k = 0; k < m; k++)
+
+			// int tmp = 0;
+			for(k = 0; k < n; k++)
 			{
-				tmp += (A[i][k] * B[i][k]);
+				C[i][j] += A[i][k]*B[k][j];
 			}
-			C[i][j] = tmp;
+			// C[i][j] = tmp;
 		}
+
+
 	}
 	return C;
 }
@@ -158,6 +170,7 @@ void ordered_fill_matrix(int **m)
 	srand(time(NULL));
 	for(i=0; i<N; i++)
 		for(j=0; j<N; j++)
+			// m[i][j] = i*N+j;
 			m[i][j] = 1;
 }
 
