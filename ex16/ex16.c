@@ -1,9 +1,7 @@
 /*
- * Write a program that performs the transpose of a square matrix A of arbitrary dimension (multiple of the number of tasks).
+ * Write a program that performs the multyplication between two matrices.
  *
- * The A is split among the tasks and initialized so that each element is unique (use row-column number and task rank).
- *
- * Thus you need to evaluate B of the form: B = A^T
+ * Thus you need to evaluate B of the form: C = AxB
  */
 
 #include <stdlib.h>
