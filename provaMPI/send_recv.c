@@ -15,7 +15,7 @@ int main(int argc, char** argv)
 	int my_rank, p, tag = 0;
 	MPI_Status status;
 	int chunk, reminder;
-	int* array,
+	int *array,
 		i,
 		*locals,
 		max,
