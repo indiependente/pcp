@@ -65,7 +65,7 @@ int find_max(int* array, int size)
 {
 	int i, max;
 	max = array[0];
-	for (i = 0; i < size; i++)
+	for (i = 1; i < size; i++)
 	{
 		if (array[i] > max)
 			max = array[i];
