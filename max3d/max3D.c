@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#include "mpi.h"
+#include <mpi.h>
 
 #define MASTER 0
 #define ROWS 64
@@ -41,8 +41,14 @@
 #define DIMENSIONS 3
 #define N 10000
 
+int*** allocate_and_fill_Int3D(int rows, int cols, int depth);
+void rand_fill_array(int* array, int size);
+void free_array_Int3D(int*** array, int rows, int cols);
+
+
 int main(int argc, char** argv){
-	int *data, ***matrix;			// data 1D, matrix 3D
+	/*******************	DECLARATIONS	*******************/
+	int*** matrix;	//	the matrix
 
 	int my_rank, cart_rank, p,
 		source, dest,
@@ -73,7 +79,7 @@ int main(int argc, char** argv){
 	int ngbrs[2], PREV=0, NEXT=1;	// shift
 
 	MPI_Comm old_comm, cart_comm;
-
+	/*******************	END DECLARATIONS	********************/
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -88,21 +94,9 @@ int main(int argc, char** argv){
 
 	if (my_rank == MASTER)
 	{
-		data = malloc(ROWS * COLS * DEPTH * sizeof(int));
-		srand(time(NULL));
-		for(i=0; i<ROWS*COLS*DEPTH; i++)
-			data[i] = rand() / (RAND_MAX / N + 1);
-//			data[i]	= i;
+		matrix = allocate_and_fill_Int3D(ROWS, COLS, DEPTH); // allocate and fill
 
-		matrix = malloc(ROWS * sizeof(int**));
-		for(i=0; i<ROWS; i++)
-			matrix[i] = malloc(COLS * sizeof(int*));
-
-		for(i=0; i<ROWS; i++)
-			for(j=0; j<COLS; j++)
-				matrix[i][j] = &data[(i * COLS * DEPTH) + (j * DEPTH)];
-
-		matrix[0][0][0] = 123456789;
+		matrix[0][0][0] = 123456789; // this is the max
 
 		for(x=0; x<P_ROWS; x++)
 		{
@@ -249,9 +243,53 @@ int main(int argc, char** argv){
 							}
 
 
-
+	if (my_rank == MASTER)
+	{
+		free_array_Int3D(matrix, ROWS, COLS);
+	}
 
 
 	MPI_Finalize();
+	return 0;
+}
 
+
+int*** allocate_and_fill_Int3D(int rows, int cols, int depth)
+{
+	int *data,				// contiguous 1D data
+		***matrix;			// matrix	3D
+	int i,j;
+
+	data = malloc(rows * cols * depth * sizeof(int));	// allocate 1D contiguous array
+	rand_fill_array(data, rows * cols * depth);			// fill it with random numbers
+
+	matrix = malloc(rows * sizeof(int**));				// allocate an array of pointer to pointer, rows-location
+	for(i=0; i<rows; i++)
+		matrix[i] = malloc(cols * sizeof(int*));
+
+	for(i=0; i<rows; i++)								// link it to the contiguous data
+			for(j=0; j<cols; j++)
+				matrix[i][j] = &data[(i * cols * depth) + (j * depth)];
+
+	return matrix;
+}
+
+void rand_fill_array(int* array, int size)
+{
+	int i;
+	srand(time(NULL));
+		for(i=0; i<size; i++)
+			array[i] = rand() / (RAND_MAX / N + 1);
+}
+
+void free_array_Int3D(int*** array, int rows, int cols)
+{
+	int i,j;
+
+	free(&array[0][0][0]);
+	for (i = 0; i < rows; ++i)
+	{
+		free(array[i]);
+	}
+	free(array);
 }
