@@ -284,7 +284,7 @@ void rand_fill_array(int* array, int size)
 
 void free_array_Int3D(int*** array, int rows, int cols)
 {
-	int i,j;
+	int i;
 
 	free(&array[0][0][0]);
 	for (i = 0; i < rows; ++i)
